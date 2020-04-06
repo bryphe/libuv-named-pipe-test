@@ -1,0 +1,7 @@
+(executable
+  (package editor-input)
+  (name Hello)
+  (public_name Hello)
+  (libraries editor-input luv)
+  (modules Hello))
+

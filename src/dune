@@ -1,0 +1,3 @@
+(library
+    (name EditorInput)
+    (public_name editor-input))
