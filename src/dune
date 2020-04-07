@@ -1,3 +1,4 @@
 (library
     (name EditorInput)
+    (libraries luv)
     (public_name editor-input))
