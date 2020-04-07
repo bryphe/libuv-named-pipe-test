@@ -20,6 +20,14 @@ module Type = {
     | 4 => Ok(KeepAlive)
     | 5 => Ok(Disconnect)
     | v => Error(Printf.sprintf("Unknown packet type: %d", v));
+
+   let to_string = fun
+   | None => "None"
+   | Regular => "Regular"
+   | Control => "Control"
+   | Ack => "Ack"
+   | KeepAlive => "KeepAlive"
+   | Disconnect => "Disconnect";
 };
 
 // The header for a packet is defined as follows by the VSCode extension host:
@@ -50,12 +58,16 @@ module Header = {
       |> Type.of_int
       |> Result.map(packetType => {packetType, id, ack, length});
     };
+
+    let to_string = ({packetType, id, ack, length}) => Printf.sprintf("Type: %s Id: %d Ack: %d Length: %d", packetType |> Type.to_string, id, ack, length);
 };
 
 type t = {
   header: Header.t,
   body: Bytes.t,
 };
+
+let to_string = ({header, body}) => Printf.sprintf("[Header]: %s\n [Body]:\n---\n%s\n---\n", header |> Header.to_string, body |> Bytes.to_string);
 
 module Parser = {
   type state =
