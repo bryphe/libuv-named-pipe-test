@@ -1,5 +1,6 @@
 type msg =
-  | Received(Protocol.Packet.t)
+  | Connected
+  | Received(Packet.t)
   | Error(string)
   | Disconnected
   | Closing;

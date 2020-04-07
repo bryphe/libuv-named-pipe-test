@@ -1,5 +1,6 @@
 type msg =
-  | Received(Protocol.Packet.t)
+  | Connected
+  | Received(Packet.t)
   | Error(string)
   | Disconnected
   | Closing;
@@ -13,18 +14,38 @@ let start = (~namedPipe: string, ~dispatch: msg => unit) => {
   };
 
   let read = clientPipe => {
+    let parser = ref(Packet.Parser.initial);
+
+    let readBuffer = (buffer: Luv.Buffer.t) => {
+      let bytes = Luv.Buffer.to_bytes(buffer);
+
+      let (newParser, packets) =
+        try(Packet.Parser.parse(bytes, parser^)) {
+        // TODO: Proper exception
+        | exn =>
+          dispatch(Error(Printexc.to_string(exn)));
+          (Packet.Parser.initial, []);
+        };
+
+      parser := newParser;
+      packets |> List.iter(packet => dispatch(Received(packet)));
+    };
+
+    let handleClosed = () => {
+      dispatch(Disconnected);
+      Luv.Handle.close(clientPipe, ignore);
+    };
+
     Luv.Stream.read_start(
       clientPipe,
       fun
-      | Error(`EOF) => {
-          dispatch(Disconnected);
-          Luv.Handle.close(clientPipe, ignore);
-        }
+      | Error(`EOF) => handleClosed()
       | Error(msg) => handleError("read_start", msg)
-      | Ok(buffer) => prerr_endline("Got buffer!"),
+      | Ok(buffer) => readBuffer(buffer),
     );
   };
 
+  // Listen for an incoming connection...
   let listen = serverPipe => {
     Luv.Stream.listen(
       serverPipe,
@@ -34,7 +55,9 @@ let start = (~namedPipe: string, ~dispatch: msg => unit) => {
           listenResult |> (r => Stdlib.Result.bind(r, _ => Luv.Pipe.init()));
 
         switch (clientPipeResult) {
-        | Ok(pipe) => read(pipe)
+        | Ok(pipe) =>
+          dispatch(Connected);
+          read(pipe);
         | Error(err) => handleError("listen", err)
         };
       },
