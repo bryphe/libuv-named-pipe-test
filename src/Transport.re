@@ -11,7 +11,6 @@ type t = {
 };
 
 let start = (~namedPipe: string, ~dispatch: msg => unit) => {
-
   let maybeClient = ref(None);
 
   let handleError = (msg, err) => {
@@ -55,7 +54,7 @@ let start = (~namedPipe: string, ~dispatch: msg => unit) => {
 
   // Listen for an incoming connection...
   let listen = serverPipe => {
-    prerr_endline ("Listening...")
+    prerr_endline("Listening...");
     Luv.Pipe.bind(serverPipe, namedPipe) |> ignore;
     Luv.Stream.listen(
       serverPipe,
@@ -63,16 +62,21 @@ let start = (~namedPipe: string, ~dispatch: msg => unit) => {
         prerr_endline("Got listen result");
         // Create a pipe for the client
         let clientPipeResult =
-          listenResult |> (r => {
-          prerr_endline("Trying to create client pipe...");
-          Stdlib.Result.bind(r, _ => Luv.Pipe.init());
-          })
-          |> r => {
-            Stdlib.Result.bind(r, pipe => {
-            Luv.Stream.accept(~server=serverPipe, ~client=pipe)
-            |> Result.map(_ => pipe);
-            })
-          };
+          listenResult
+          |> (
+            r => {
+              prerr_endline("Trying to create client pipe...");
+              Stdlib.Result.bind(r, _ => Luv.Pipe.init());
+            }
+          )
+          |> (
+            r => {
+              Stdlib.Result.bind(r, pipe => {
+                Luv.Stream.accept(~server=serverPipe, ~client=pipe)
+                |> Result.map(_ => pipe)
+              });
+            }
+          );
 
         switch (clientPipeResult) {
         | Ok(pipe) =>
@@ -88,24 +92,22 @@ let start = (~namedPipe: string, ~dispatch: msg => unit) => {
     Luv.Pipe.init() |> Result.map_error(Luv.Error.strerror);
 
   serverPipeResult |> Result.iter(listen);
-  
-  serverPipeResult |> Result.map(server => {
-    server,
-    maybeClient
-  });
+
+  serverPipeResult |> Result.map(server => {server, maybeClient});
 };
 
-let send = (~packet, {maybeClient, }) => switch(maybeClient^) {
-| None => prerr_endline ("No client, yet!");
-| Some(c) =>
-   let bytes = Packet.toBytes(packet);
-   let byteLen= bytes |> Bytes.length;
-   prerr_endline (Printf.sprintf("Sending %d bytes...", byteLen));
-   let buffer = Luv.Buffer.from_bytes(bytes);
-   // TODO: FIX PENDING BYTES
-   Luv.Stream.write(c, [buffer], (err, count) => {
-    prerr_endline (Printf.sprintf("Wrote %d bytes...", count)); 
-   });
-};
+let send = (~packet, {maybeClient}) =>
+  switch (maybeClient^) {
+  | None => prerr_endline("No client, yet!")
+  | Some(c) =>
+    let bytes = Packet.toBytes(packet);
+    let byteLen = bytes |> Bytes.length;
+    prerr_endline(Printf.sprintf("Sending %d bytes...", byteLen));
+    let buffer = Luv.Buffer.from_bytes(bytes);
+    // TODO: FIX PENDING BYTES
+    Luv.Stream.write(c, [buffer], (err, count) => {
+      prerr_endline(Printf.sprintf("Wrote %d bytes...", count))
+    });
+  };
 
 let close = ({server, _}) => Luv.Handle.close(server, ignore);

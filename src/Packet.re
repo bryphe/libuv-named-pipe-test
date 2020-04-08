@@ -21,21 +21,23 @@ module Type = {
     | 5 => Ok(Disconnect)
     | v => Error(Printf.sprintf("Unknown packet type: %d", v));
 
-  let toInt = fun
-  | None => 0
-  | Regular => 1
-  | Control => 2
-  | Ack => 3
-  | KeepAlive => 4
-  | Disconnect => 5;
+  let toInt =
+    fun
+    | None => 0
+    | Regular => 1
+    | Control => 2
+    | Ack => 3
+    | KeepAlive => 4
+    | Disconnect => 5;
 
-   let toString = fun
-   | None => "None"
-   | Regular => "Regular"
-   | Control => "Control"
-   | Ack => "Ack"
-   | KeepAlive => "KeepAlive"
-   | Disconnect => "Disconnect";
+  let toString =
+    fun
+    | None => "None"
+    | Regular => "Regular"
+    | Control => "Control"
+    | Ack => "Ack"
+    | KeepAlive => "KeepAlive"
+    | Disconnect => "Disconnect";
 };
 
 // The header for a packet is defined as follows by the VSCode extension host:
@@ -67,7 +69,14 @@ module Header = {
       |> Result.map(packetType => {packetType, id, ack, length});
     };
 
-    let toString = ({packetType, id, ack, length}) => Printf.sprintf("Type: %s Id: %d Ack: %d Length: %d", packetType |> Type.toString, id, ack, length);
+  let toString = ({packetType, id, ack, length}) =>
+    Printf.sprintf(
+      "Type: %s Id: %d Ack: %d Length: %d",
+      packetType |> Type.toString,
+      id,
+      ack,
+      length,
+    );
 
   let toBytes = ({packetType, id, ack, length}) => {
     let bytes = Bytes.create(Constants.headerByteLength);
@@ -87,23 +96,29 @@ type t = {
 
 let create = (~bytes: Bytes.t, ~packetType: Type.t, ~id: int) => {
   let length = Bytes.length(bytes);
-  let header = Header.{
-    packetType,
-    id,
-    // TODO: Set up ack
-    ack: 0,
-    length,
-  };
+  let header =
+    Header.{
+      packetType,
+      id,
+      // TODO: Set up ack
+      ack: 0,
+      length,
+    };
 
-  { header, body: bytes }
+  {header, body: bytes};
 };
 
 let toBytes = ({header, body}) => {
-   let headerBytes = header |> Header.toBytes;
-   Bytes.cat(headerBytes, body);
+  let headerBytes = header |> Header.toBytes;
+  Bytes.cat(headerBytes, body);
 };
 
-let toString = ({header, body}) => Printf.sprintf("[Header]: %s\n [Body]:\n---|%s|---\n", header |> Header.toString, body |> Bytes.to_string);
+let toString = ({header, body}) =>
+  Printf.sprintf(
+    "[Header]: %s\n [Body]:\n---|%s|---\n",
+    header |> Header.toString,
+    body |> Bytes.to_string,
+  );
 
 module Parser = {
   type state =
