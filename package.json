@@ -13,8 +13,12 @@
     ]
   },
   "dependencies": {
+    "@opam/decoders-yojson": "*",
     "@opam/dune": "*",
+    "@opam/yojson": "^1.5.0",
     "@esy-ocaml/reason": "^3.5.2",
+    "@opam/ppx_deriving_yojson": "*",
+    "@opam/ppx_deriving": "*",
     "refmterr": "*",
     "ocaml": "^4.7.0",
     "@opam/luv": "*"
