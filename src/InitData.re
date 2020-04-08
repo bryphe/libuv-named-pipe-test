@@ -1,5 +1,18 @@
-[@deriving (show, yojson({strict: false}))]
-type extensionInfo = unit;
+module Extension = {
+  [@deriving (show, yojson({strict: false}))]
+  type t = {
+    identifier: string,
+    extensionLocation: Uri.t,
+    name: string,
+    main: option(string),
+    version: string,
+    engines: string,
+    activationEvents: list(string),
+    extensionDependencies: list(string),
+    extensionKind: string,
+    enableProposedApi: bool,
+  }
+};
 
 module Environment = {
   [@deriving (show, yojson({strict: false}))]
@@ -42,9 +55,9 @@ module Remote = {
 type t = {
   version: string,
   parentPid: int,
-  extensions: list(extensionInfo),
-  resolvedExtensions: list(extensionInfo),
-  hostExtensions: list(extensionInfo),
+  extensions: list(Extension.t),
+  resolvedExtensions: list(unit),
+  hostExtensions: list(unit),
   environment: Environment.t,
   logLevel: int,
   logsLocation: Uri.t,
@@ -60,8 +73,6 @@ let create =
       ~logsLocation,
       ~logFile,
       ~environment=Environment.default,
-      ~resolvedExtensions=[],
-      ~hostExtensions=[],
       ~logLevel=0,
       ~autoStart=true,
       ~remote=Remote.default,
@@ -71,8 +82,8 @@ let create =
   parentPid,
   logLevel,
   extensions,
-  resolvedExtensions,
-  hostExtensions,
+  resolvedExtensions:[],
+  hostExtensions: [],
   environment,
   logsLocation,
   logFile,

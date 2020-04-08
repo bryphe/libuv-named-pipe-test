@@ -195,7 +195,7 @@ let start =
         |> Result.iter(msg => {
              switch (msg) {
              | Initialized =>
-               send(Message.terminate(~id=2));
+               //send(Message.terminate(~id=2));
                prerr_endline("INITIALIZED!");
              | Ready =>
                let bytes =

@@ -4,6 +4,19 @@ open Exthost;
 
 Printexc.record_backtrace(true);
 
+let extensions = InitData.Extension.[{
+  identifier: "oni-dev-extension",
+  extensionLocation: Uri.fromPath("/Users/bryphe/reason-vscode-exthost/test_collateral/extensions/oni-activation-events-tests"),
+  version: "9.9.9",
+  name: "oni-dev-extension",
+  main: Some("./extension.js"),
+  engines:"vscode",
+  activationEvents: ["*"],
+  extensionDependencies: [],
+  extensionKind: "ui",
+  enableProposedApi: true,
+}];
+
 /*let runningServer: ref(option(Exthost.Transport.t)) = ref(None);
   let hasSent = ref(false);
 
@@ -49,7 +62,7 @@ let initData =
     ~parentPid=1,
     ~logsLocation=Uri.fromPath("/tmp/loggy"),
     ~logFile=Uri.fromPath("/tmp/log-file"),
-    [],
+    extensions,
   );
 //  |> InitData.to_yojson
 //  |> Yojson.Safe.to_string;
@@ -59,6 +72,6 @@ let dispatch = msg => {
 };
 
 let protocol =
-  Protocol.start(~namedPipe="/tmp/test-pipe146.sock", ~initData, ~dispatch);
+  Protocol.start(~namedPipe="/tmp/test-pipe151.sock", ~initData, ~dispatch);
 
 Luv.Loop.run() |> ignore;
