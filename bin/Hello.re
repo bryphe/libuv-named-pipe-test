@@ -1,7 +1,6 @@
 print_endline("Hello, world!");
 
 open Exthost;
-open Exthost.Transport;
 
 /*let runningServer: ref(option(Exthost.Transport.t)) = ref(None);
   let hasSent = ref(false);
@@ -58,6 +57,6 @@ let dispatch = msg => {
 };
 
 let protocol =
-  Protocol.start(~namedPipe="/tmp/test-pipe130.sock", ~initData, ~dispatch);
+  Protocol.start(~namedPipe="/tmp/test-pipe131.sock", ~initData, ~dispatch);
 
 Luv.Loop.run() |> ignore;

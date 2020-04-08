@@ -1,3 +1,5 @@
+open Transport;
+
 module Message = {
   [@deriving (show, yojson({strict: false}))]
   type ok =
@@ -72,7 +74,7 @@ let start =
         |> Bytes.of_string;
 
       let packet =
-        Packet.create(~bytes, ~packetType=Packet.Type.Regular, ~id=1);
+        Packet.create(~bytes, ~packetType=Packet.Regular, ~id=1);
 
       send(packet);
       prerr_endline("READY!");
