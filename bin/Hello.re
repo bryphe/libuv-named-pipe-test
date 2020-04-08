@@ -59,6 +59,6 @@ let dispatch = msg => {
 };
 
 let protocol =
-  Protocol.start(~namedPipe="/tmp/test-pipe143.sock", ~initData, ~dispatch);
+  Protocol.start(~namedPipe="/tmp/test-pipe146.sock", ~initData, ~dispatch);
 
 Luv.Loop.run() |> ignore;

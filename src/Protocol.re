@@ -80,6 +80,7 @@ module Message = {
 
   [@deriving (show, yojson({strict: false}))]
   type t =
+    | Connected
     | Initialized
     | Ready
     | Terminate
@@ -96,7 +97,9 @@ module Message = {
     | Cancel({requestId: int})
     | TellOk(ok)
     | Error(error)
-    | Unknown(bytes);
+    | Unknown(bytes)
+    | Closing
+    | Disconnected;
 
   // Needs to be in sync with rpcProtocol.t
   let requestJsonArgs = 1;
@@ -110,6 +113,12 @@ module Message = {
   let replyOkJSON = 9;
   let replyErrError = 10;
   let replyErrEmpty = 11;
+
+  let terminate = (~id) => {
+    let bytes = Bytes.create(1);
+    Bytes.set_uint8(bytes, 0, 3);
+    Packet.create(~id, ~bytes, ~packetType=Regular);
+  };
 
   let ofPacket = (packet: Packet.t) => {
     let {body, _}: Packet.t = packet;
@@ -185,7 +194,9 @@ let start =
         message
         |> Result.iter(msg => {
              switch (msg) {
-             | Initialized => prerr_endline("INITIALIZED!")
+             | Initialized =>
+               send(Message.terminate(~id=2));
+               prerr_endline("INITIALIZED!");
              | Ready =>
                let bytes =
                  initData
@@ -212,9 +223,9 @@ let start =
   let transportHandler = msg =>
     switch (msg) {
     | Transport.Error(msg) => dispatch(Message.Error(Message(msg)))
-    | Transport.Connected => ()
-    | Transport.Disconnected => ()
-    | Transport.Closing => ()
+    | Transport.Connected => dispatch(Message.Connected)
+    | Transport.Disconnected => dispatch(Message.Disconnected)
+    | Transport.Closing => dispatch(Message.Closing)
     | Transport.Received(packet) => onPacket(packet)
     };
 

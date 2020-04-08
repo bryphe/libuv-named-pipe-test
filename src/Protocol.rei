@@ -12,6 +12,7 @@ module Message: {
 
   [@deriving (show, yojson({strict: false}))]
   type t =
+    | Connected
     | Initialized
     | Ready
     | Terminate
@@ -28,7 +29,9 @@ module Message: {
     | Cancel({requestId: int})
     | TellOk(ok)
     | Error(error)
-    | Unknown(bytes);
+    | Unknown(bytes)
+    | Closing
+    | Disconnected;
 
   let ofPacket: Transport.Packet.t => result(t, string);
 };
