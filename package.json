@@ -7,9 +7,9 @@
     "format": "esy dune build @fmt --auto-promote"
   },
   "esy": {
-    "build": ["refmterr dune build -p editor-input"],
+    "build": ["refmterr dune build -p vscode-exthost"],
     "install": [
-        "esy-installer editor-input.install"
+        "esy-installer vscode-exthost.install"
     ]
   },
   "dependencies": {

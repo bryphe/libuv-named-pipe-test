@@ -1,4 +1,4 @@
 (library
-    (name EditorInput)
+    (name exthost)
     (libraries luv)
-    (public_name editor-input))
+    (public_name vscode-exthost))

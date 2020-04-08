@@ -11,7 +11,7 @@ module Type = {
     | KeepAlive
     | Disconnect;
 
-  let of_int =
+  let ofInt =
     fun
     | 0 => Ok(None)
     | 1 => Ok(Regular)
@@ -21,7 +21,15 @@ module Type = {
     | 5 => Ok(Disconnect)
     | v => Error(Printf.sprintf("Unknown packet type: %d", v));
 
-   let to_string = fun
+  let toInt = fun
+  | None => 0
+  | Regular => 1
+  | Control => 2
+  | Ack => 3
+  | KeepAlive => 4
+  | Disconnect => 5;
+
+   let toString = fun
    | None => "None"
    | Regular => "Regular"
    | Control => "Control"
@@ -43,7 +51,7 @@ module Header = {
     length: int,
   };
 
-  let of_bytes = bytes =>
+  let ofBytes = bytes =>
     if (Bytes.length(bytes) != Constants.headerByteLength) {
       Error(
         Printf.sprintf("Incorrect header size: %d", Bytes.length(bytes)),
@@ -55,11 +63,21 @@ module Header = {
       let length = Bytes.get_int32_be(bytes, 9) |> Int32.to_int;
 
       packetTypeUint
-      |> Type.of_int
+      |> Type.ofInt
       |> Result.map(packetType => {packetType, id, ack, length});
     };
 
-    let to_string = ({packetType, id, ack, length}) => Printf.sprintf("Type: %s Id: %d Ack: %d Length: %d", packetType |> Type.to_string, id, ack, length);
+    let toString = ({packetType, id, ack, length}) => Printf.sprintf("Type: %s Id: %d Ack: %d Length: %d", packetType |> Type.toString, id, ack, length);
+
+  let toBytes = ({packetType, id, ack, length}) => {
+    let bytes = Bytes.create(Constants.headerByteLength);
+    let packetTypeInt = packetType |> Type.toInt;
+    Bytes.set_uint8(bytes, 0, packetTypeInt);
+    Bytes.set_int32_be(bytes, 1, id |> Int32.of_int);
+    Bytes.set_int32_be(bytes, 5, ack |> Int32.of_int);
+    Bytes.set_int32_be(bytes, 9, length |> Int32.of_int);
+    bytes;
+  };
 };
 
 type t = {
@@ -67,7 +85,25 @@ type t = {
   body: Bytes.t,
 };
 
-let to_string = ({header, body}) => Printf.sprintf("[Header]: %s\n [Body]:\n---\n%s\n---\n", header |> Header.to_string, body |> Bytes.to_string);
+let create = (~bytes: Bytes.t, ~packetType: Type.t, ~id: int) => {
+  let length = Bytes.length(bytes);
+  let header = Header.{
+    packetType,
+    id,
+    // TODO: Set up ack
+    ack: 0,
+    length,
+  };
+
+  { header, body: bytes }
+};
+
+let toBytes = ({header, body}) => {
+   let headerBytes = header |> Header.toBytes;
+   Bytes.cat(headerBytes, body);
+};
+
+let toString = ({header, body}) => Printf.sprintf("[Header]: %s\n [Body]:\n---|%s|---\n", header |> Header.toString, body |> Bytes.to_string);
 
 module Parser = {
   type state =
@@ -101,7 +137,7 @@ module Parser = {
             totalLen - Constants.headerByteLength,
           );
 
-        let header = Header.of_bytes(headerBytes) |> Result.get_ok;
+        let header = Header.ofBytes(headerBytes) |> Result.get_ok;
 
         ({state: WaitingForBody(header), bytes: remainingBytes}, None);
       } else {

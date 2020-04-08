@@ -1,7 +1,7 @@
 (executable
-  (package editor-input)
+  (package vscode-exthost)
   (name Hello)
   (public_name Hello)
-  (libraries editor-input luv)
+  (libraries vscode-exthost luv)
   (modules Hello))
 
