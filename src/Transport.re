@@ -3,41 +3,41 @@ module Packet = {
     let headerByteLength = 13;
   };
 
-    type packetType =
-      | Unspecified
-      | Regular
-      | Control
-      | Ack
-      | KeepAlive
-      | Disconnect;
+  type packetType =
+    | Unspecified
+    | Regular
+    | Control
+    | Ack
+    | KeepAlive
+    | Disconnect;
 
-    let typeOfInt =
-      fun
-      | 0 => Ok(Unspecified)
-      | 1 => Ok(Regular)
-      | 2 => Ok(Control)
-      | 3 => Ok(Ack)
-      | 4 => Ok(KeepAlive)
-      | 5 => Ok(Disconnect)
-      | v => Error(Printf.sprintf("Unknown packet type: %d", v));
+  let typeOfInt =
+    fun
+    | 0 => Ok(Unspecified)
+    | 1 => Ok(Regular)
+    | 2 => Ok(Control)
+    | 3 => Ok(Ack)
+    | 4 => Ok(KeepAlive)
+    | 5 => Ok(Disconnect)
+    | v => Error(Printf.sprintf("Unknown packet type: %d", v));
 
-    let typeToInt =
-      fun
-      | Unspecified => 0
-      | Regular => 1
-      | Control => 2
-      | Ack => 3
-      | KeepAlive => 4
-      | Disconnect => 5;
+  let typeToInt =
+    fun
+    | Unspecified => 0
+    | Regular => 1
+    | Control => 2
+    | Ack => 3
+    | KeepAlive => 4
+    | Disconnect => 5;
 
-    let typeToString =
-      fun
-      | Unspecified => "Unspecified"
-      | Regular => "Regular"
-      | Control => "Control"
-      | Ack => "Ack"
-      | KeepAlive => "KeepAlive"
-      | Disconnect => "Disconnect";
+  let typeToString =
+    fun
+    | Unspecified => "Unspecified"
+    | Regular => "Regular"
+    | Control => "Control"
+    | Ack => "Ack"
+    | KeepAlive => "KeepAlive"
+    | Disconnect => "Disconnect";
 
   // The header for a packet is defined as follows by the VSCode extension host:
   // Byte 0 - uint8 - message type
@@ -46,7 +46,7 @@ module Packet = {
   // Byte 9 - unit32 (big endian) - data length
   module Header = {
     type t = {
-      packetType: packetType,
+      packetType,
       id: int,
       ack: int,
       length: int,
@@ -170,10 +170,7 @@ module Packet = {
           let packet = {header, body};
           let remainingBytes =
             Bytes.sub(accumulatedBytes, length, totalLen - length);
-          (
-            {state: WaitingForHeader, bytes: remainingBytes},
-            Some(packet),
-          );
+          ({state: WaitingForHeader, bytes: remainingBytes}, Some(packet));
         } else {
           ({state: WaitingForBody(header), bytes: accumulatedBytes}, None);
         };
@@ -210,7 +207,6 @@ module Packet = {
       (parser, messages);
     };
   };
-    
 };
 
 type msg =
